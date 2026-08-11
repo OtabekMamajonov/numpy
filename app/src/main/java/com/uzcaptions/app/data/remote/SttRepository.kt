@@ -11,6 +11,8 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
@@ -58,7 +60,9 @@ class SttRepository(private val settingsManager: SettingsManager) {
             return SttResult.Error("Video davomiyligini aniqlab bo'lmadi.")
         }
 
-        val chunks = AudioChunkExtractor.extractChunks(context, videoUri, durationMs)
+        val chunks = withContext(Dispatchers.IO) {
+            AudioChunkExtractor.extractChunks(context, videoUri, durationMs)
+        }
         if (chunks.isEmpty()) {
             return SttResult.Error(
                 "Videodan audio ajratib bo'lmadi. Videoda ovoz yo'q yoki format qo'llab-quvvatlanmaydi."
@@ -69,7 +73,7 @@ class SttRepository(private val settingsManager: SettingsManager) {
         try {
             for ((index, chunk) in chunks.withIndex()) {
                 try {
-                    val requestFile = chunk.file.asRequestBody("audio/mp4".toMediaTypeOrNull())
+                    val requestFile = chunk.file.asRequestBody("audio/wav".toMediaTypeOrNull())
                     val part = MultipartBody.Part.createFormData("audio", chunk.file.name, requestFile)
 
                     val response = service.speechToText(apiKey, part)

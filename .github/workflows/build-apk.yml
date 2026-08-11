@@ -1,0 +1,32 @@
+name: APK yasash
+
+on:
+  push:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodni olish
+        uses: actions/checkout@v4
+
+      - name: Java o'rnatish
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: gradlew'ga ishga tushirish huquqi berish
+        run: chmod +x gradlew
+
+      - name: Debug APK yasash
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: APK faylini saqlash
+        uses: actions/upload-artifact@v4
+        with:
+          name: dokon-hisob-kitob-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk

@@ -52,18 +52,18 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Nutqni matnga aylantirish (STT)", style = MaterialTheme.typography.titleMedium)
+            Text("Nutqni matnga aylantirish (Muxlisa AI)", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Avtomatik subtitr yaratish uchun Muxlisa AI yoki uzbekvoice.ai API key kerak. " +
-                    "Key faqat shu qurilmada shifrlangan holda saqlanadi. Bu integratsiya hozircha " +
-                    "sozlanmoqda — API key kiritilgan bo'lsa ham, aniq hujjat tasdiqlanmaguncha " +
-                    "avtomatik generatsiya ishlamasligi mumkin. Subtitrlarni qo'lda qo'shish har doim ishlaydi.",
+                "Avtomatik subtitr yaratish uchun Muxlisa AI (muxlisa.uz) API key kerak. " +
+                    "Key faqat shu qurilmada shifrlangan holda saqlanadi. Uzoq videolar avtomatik " +
+                    "ravishda ~8 soniyalik bo'laklarga bo'linib yuboriladi (API'ning 5 MB / 60 soniya " +
+                    "chegarasi tufayli).",
                 style = MaterialTheme.typography.bodySmall
             )
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { apiKey = it },
-                label = { Text("STT API key") },
+                label = { Text("Muxlisa AI API key") },
                 singleLine = true,
                 visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),

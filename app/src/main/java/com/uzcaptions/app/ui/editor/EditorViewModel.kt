@@ -47,7 +47,7 @@ class EditorViewModel(
         val project = _uiState.value.project ?: return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isGenerating = true, generateError = null)
-            when (val result = sttRepository.transcribe(context, Uri.parse(project.videoUri))) {
+            when (val result = sttRepository.transcribe(context, Uri.parse(project.videoUri), project.durationMs)) {
                 is SttResult.Success -> {
                     repository.replaceSegments(projectId, result.segments)
                     _uiState.value = _uiState.value.copy(isGenerating = false)

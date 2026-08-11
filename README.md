@@ -1,86 +1,61 @@
-# Do'kon Hisob-Kitob
+# UzCaptions
 
-Kichik oziq-ovqat do'konlari uchun Android hisob-kitob ilovasi. Kotlin + Jetpack
-Compose + Room ustida qurilgan, OpenAI API bilan integratsiya qilingan AI
-yordamchiga ega.
+O'zbek tilidagi videolarga avtomatik subtitr (AI captions) yozib beruvchi Android ilova. Kotlin + Jetpack Compose + Room + Media3 (ExoPlayer) ustida qurilgan.
 
 ## Funksiyalar
 
-- **Boshqaruv paneli** — bugungi/haftalik savdo, sof foyda, umumiy qarzlar,
-  kam qolgan mahsulotlar va top sotilgan mahsulotlar bir qarashda.
-- **Sotuv (kassa)** — mahsulotlarni savatga qo'shib naqd yoki nasiyaga sotish;
-  sotilgan miqdor omordan avtomatik ayiriladi.
-- **Mahsulotlar (ombor)** — mahsulot qo'shish/tahrirlash/o'chirish, tan narx,
-  sotish narxi, miqdor, o'lchov birligi va kam qolish chegarasi.
-- **Xarajatlar** — ijaraga, kommunal, transport va boshqa xarajatlarni
-  kategoriya bo'yicha qayd etish.
-- **Qarz daftar** — mijozlarga nasiyaga berilgan mahsulotlar, qarzdorlar
-  ro'yxati va to'lovlarni kuzatish.
-- **Hisobotlar** — 7/30/90 kunlik savdo, foyda, xarajat statistikasi va
-  eng ko'p sotilgan mahsulotlar.
-- **AI Yordamchi (OpenAI)** — do'kon egasi tabiiy tilda savol beradi
-  ("bugun qancha foyda qildim?", "eng ko'p sotilgan mahsulot qaysi?").
-  Ilova do'konning haqiqiy savdo/xarajat/qarz ma'lumotlarini kontekst
-  sifatida OpenAI Chat Completions API'ga yuboradi va o'zbek tilida javob
-  qaytaradi.
-- **Sozlamalar** — OpenAI API key (qurilmada shifrlangan holda saqlanadi,
-  `EncryptedSharedPreferences` orqali), do'kon nomi, valyuta va OpenAI modeli.
+- **Video import** — telefondan istalgan videoni yuklash
+- **Pleyer + jonli subtitr ko'rinishi** — ExoPlayer orqali video ko'rish, tanlangan dizayn bilan subtitr ustiga chiziladi
+- **Qo'lda subtitr yaratish/tahrirlash** — matn va vaqtni (boshlanish/tugash) qo'lda kiritish, o'chirish, qo'shish
+- **Avtomatik subtitr yaratish (Muxlisa/uzbekvoice AI)** — *hozircha qoralama holatda* (quyidagi "STT integratsiyasi holati" bo'limiga qarang)
+- **6 ta tayyor dizayn uslubi** — Klassik, Qalin sariq, Karaoke (so'zma-so'z ajratish), Minimal, Neon, Yumshoq pushti
+- **SRT eksport** — subtitrlarni `.srt` fayl sifatida saqlash/ulashish
+- **Sozlamalar** — STT API key'ni qurilmada shifrlangan holda saqlash
+
+## STT integratsiyasi holati (MUHIM)
+
+`data/remote/SttRepository.kt` fayli hali **Muxlisa AI / uzbekvoice.ai API bilan to'liq ulanmagan**. Bu loyihani tayyorlash paytida ularning rasmiy hujjat sahifalariga (`muxlisa.uz`, `uzbekvoice.ai`, `mohir.uzbekvoice.ai`) tarmoq cheklovi tufayli kira olmadim, shuning uchun aniq so'rov/javob formatini tasdiqlamasdan integratsiya yozish xato ilovaga olib kelishi mumkin edi.
+
+**Ulash uchun kerak bo'ladigan ma'lumotlar:**
+- STT endpoint manzili (URL)
+- Autentifikatsiya usuli (masalan `Authorization: Bearer <key>` yoki boshqa header)
+- So'rov formati (multipart audio fayl yuklashmi, qaysi audio format — wav/mp3/m4a, til kodi qanday uzatiladi)
+- Javob JSON strukturasi (matn, so'z darajasidagi vaqt belgilari bormi yo'qmi)
+
+Bu ma'lumotlar aniqlangach, `SttRepository.transcribe()` funksiyasini haqiqiy Retrofit chaqiruviga almashtirish kifoya — qolgan qism (ma'lumotlar bazasiga yozish, UI'da ko'rsatish) tayyor.
+
+Hozircha ilovada subtitrlarni **qo'lda** yaratish va barcha dizayn/eksport funksiyalari to'liq ishlaydi.
 
 ## Texnik stack
 
 - Kotlin, Jetpack Compose (Material 3), Navigation-Compose
-- Room (mahalliy SQLite ma'lumotlar bazasi)
-- Retrofit + Moshi + OkHttp (OpenAI API bilan aloqa)
-- AndroidX Security Crypto (API key'ni shifrlab saqlash uchun)
+- Media3 (ExoPlayer) — video pleyer
+- Room — mahalliy ma'lumotlar bazasi (loyihalar, subtitr segmentlari)
+- Retrofit + Moshi + OkHttp — STT API uchun tayyorlangan (hali ulanmagan)
+- AndroidX Security Crypto — API key'ni shifrlab saqlash
 - MVVM arxitekturasi, Kotlin Coroutines/Flow
 
 ## Loyihani ochish
 
-1. Android Studio (Koala yoki undan yangi versiya) orqali ushbu papkani oching.
-2. Gradle sinxronlanishini kuting (internet kerak, chunki kutubxonalar
-   Google/Maven Central'dan yuklanadi).
-3. `Run` tugmasi orqali emulyator yoki qurilmada ishga tushiring.
-
-Agar `./gradlew` ishlamasa (`Permission denied`), quyidagini bajaring:
-
-```bash
-chmod +x gradlew
-./gradlew assembleDebug
-```
-
-## OpenAI API key qanday olinadi
-
-1. https://platform.openai.com saytiga kiring va hisobingizda "API keys"
-   bo'limidan yangi key yarating.
-2. Ilovada **Sozlamalar** bo'limiga o'ting va API key'ni kiriting, so'ng
-   "Saqlash" tugmasini bosing.
-3. Endi **AI Yordamchi** bo'limidan do'koningiz haqida savol berishingiz
-   mumkin. API key faqat qurilmangizda shifrlangan holda saqlanadi va
-   hech qayerga (serverimizga) yuborilmaydi — faqat to'g'ridan-to'g'ri
-   OpenAI serveriga.
-
-> Diqqat: OpenAI API'dan foydalanish pullik bo'lishi mumkin. Narxlar uchun
-> platform.openai.com/pricing sahifasiga qarang.
+1. Android Studio orqali ushbu papkani oching, Gradle sinxronlanishini kuting.
+2. `Run` tugmasi orqali ishga tushiring, yoki GitHub Actions orqali tayyor APK yasang (`.github/workflows/build-apk.yml` — har push'da avtomatik ishga tushadi, natija "Actions" bo'limida artifact sifatida chiqadi).
 
 ## Loyiha tuzilishi
 
 ```
-app/src/main/java/com/dokonhisob/app/
+app/src/main/java/com/uzcaptions/app/
 ├── data/
-│   ├── local/          # Room entity, DAO, AppDatabase
-│   ├── remote/          # OpenAI Retrofit servisi va modellari
-│   ├── repository/      # ShopRepository, AiAssistantRepository
-│   └── preferences/      # SettingsManager (shifrlangan sozlamalar)
+│   ├── local/          # Room entity (SubtitleProject, SubtitleSegment), DAO, AppDatabase
+│   ├── remote/          # STT (Muxlisa/uzbekvoice) repository — qoralama
+│   ├── repository/      # SubtitleRepository
+│   └── preferences/      # SettingsManager (shifrlangan API key)
 ├── ui/
-│   ├── dashboard/        # Boshqaruv paneli
-│   ├── sales/            # Kassa/POS ekrani
-│   ├── products/         # Ombor
-│   ├── expenses/         # Xarajatlar
-│   ├── debts/             # Qarz daftar
-│   ├── reports/           # Hisobotlar
-│   ├── assistant/         # AI Yordamchi chat ekrani
-│   ├── settings/          # Sozlamalar
-│   └── navigation/        # Navigatsiya grafigi va bottom bar
-├── DokonApplication.kt    # Oddiy service-locator (DB, repo'larni yaratadi)
+│   ├── projects/         # Bosh sahifa — loyihalar ro'yxati, video import
+│   ├── editor/            # Pleyer + subtitr overlay + vaqt jadvali (tahrirlash)
+│   ├── style/             # Dizayn uslublarini tanlash
+│   ├── settings/          # Sozlamalar (API key)
+│   ├── common/            # Vaqt formatlash, SRT eksport, video metadata
+│   └── navigation/        # Navigatsiya grafigi
+├── UzCaptionsApplication.kt
 └── MainActivity.kt
 ```

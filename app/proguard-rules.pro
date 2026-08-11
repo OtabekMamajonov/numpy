@@ -1,5 +1,5 @@
-# Keep Moshi-generated code for OpenAI request/response models
--keepclasseswithmembers class com.dokonhisob.app.data.remote.** {
+# Keep Moshi-generated code for STT request/response models
+-keepclasseswithmembers class com.uzcaptions.app.data.remote.** {
     <init>(...);
 }
 -keep class com.squareup.moshi.** { *; }

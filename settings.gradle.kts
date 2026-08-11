@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DokonHisobKitob"
+rootProject.name = "UzCaptions"
 include(":app")

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.dokonhisob.app"
+    namespace = "com.uzcaptions.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.dokonhisob.app"
+        applicationId = "com.uzcaptions.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -75,12 +75,17 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    // Networking (OpenAI API)
+    // Networking (Muxlisa/uzbekvoice speech-to-text API)
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Video playback + caption preview
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+    implementation("androidx.media3:media3-common:1.3.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 

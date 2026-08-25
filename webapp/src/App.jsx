@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchCategories, fetchServices } from './api'
+import { fetchCategories, fetchMe, fetchServices } from './api'
+import Registration from './Registration'
 import ServiceDetail from './ServiceDetail'
 import { ToolIcon } from './icons'
 
@@ -11,6 +12,7 @@ const SORTS = [
 ]
 
 export default function App() {
+  const [me, setMe] = useState(null)
   const [categories, setCategories] = useState([])
   const [services, setServices] = useState([])
   const [activeCategory, setActiveCategory] = useState(null)
@@ -20,13 +22,24 @@ export default function App() {
   const [error, setError] = useState(null)
   const [selectedService, setSelectedService] = useState(null)
 
+  const registered = me?.is_registered === true
+
   useEffect(() => {
-    fetchCategories()
-      .then(setCategories)
+    fetchMe()
+      .then(setMe)
       .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
+    if (!registered) return
+    fetchCategories()
+      .then(setCategories)
+      .catch((e) => setError(e.message))
+  }, [registered])
+
+  useEffect(() => {
+    if (!registered) return
     let cancelled = false
     setBusy(true)
     fetchServices({ categoryId: activeCategory, sort })
@@ -37,18 +50,17 @@ export default function App() {
         if (!cancelled) setError(e.message)
       })
       .finally(() => {
-        if (!cancelled) {
-          setBusy(false)
-          setLoading(false)
-        }
+        if (!cancelled) setBusy(false)
       })
     return () => {
       cancelled = true
     }
-  }, [activeCategory, sort])
+  }, [registered, activeCategory, sort])
 
   if (loading) return <div className="state">Yuklanmoqda...</div>
   if (error) return <div className="state error">{error}</div>
+
+  if (!registered) return <Registration onDone={setMe} />
 
   if (selectedService) {
     return <ServiceDetail service={selectedService} onBack={() => setSelectedService(null)} />
@@ -108,7 +120,9 @@ export default function App() {
             </div>
           </button>
         ))}
-        {services.length === 0 && <div className="state">Bu bo'limda xizmatlar yo'q.</div>}
+        {services.length === 0 && !busy && (
+          <div className="state">Bu bo'limda xizmatlar yo'q.</div>
+        )}
       </div>
     </div>
   )

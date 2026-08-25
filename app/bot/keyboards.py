@@ -3,43 +3,11 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
-    ReplyKeyboardRemove,
     WebAppInfo,
 )
 
 from app.config import settings
 from app.db.models import Brigade, Category, Order, Service
-
-CITIES = [
-    "Toshkent",
-    "Samarqand",
-    "Buxoro",
-    "Andijon",
-    "Farg'ona",
-    "Namangan",
-    "Qashqadaryo",
-    "Surxondaryo",
-    "Xorazm",
-    "Navoiy",
-    "Jizzax",
-    "Sirdaryo",
-    "Qoraqalpog'iston",
-]
-
-
-def phone_request_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📱 Telefon raqamni yuborish", request_contact=True)]],
-        resize_keyboard=True,
-        one_time_keyboard=True,
-    )
-
-
-def city_keyboard() -> ReplyKeyboardMarkup:
-    rows = [CITIES[i : i + 2] for i in range(0, len(CITIES), 2)]
-    keyboard = [[KeyboardButton(text=city) for city in row] for row in rows]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
-
 
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
@@ -49,10 +17,6 @@ def main_menu_keyboard() -> ReplyKeyboardMarkup:
         ],
         resize_keyboard=True,
     )
-
-
-def remove_keyboard() -> ReplyKeyboardRemove:
-    return ReplyKeyboardRemove()
 
 
 def brigade_assign_keyboard(order_id: int, brigades: list[Brigade]) -> InlineKeyboardMarkup:

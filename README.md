@@ -6,8 +6,8 @@ o'z brigadalaridan biriga biriktiradi.
 
 ## Nima qanday ishlaydi
 
-1. **`/start`** — foydalanuvchidan ism-familiya, telefon raqam, shahar va tuman so'raladi va bazaga saqlanadi.
-2. **🛠 Katalog** tugmasi Telegram Mini App'ni ochadi — kategoriyalar, xizmatlar, narxlar va rasmlar. Xizmatlarni saralash mumkin: 🔥 Ommabop · 💎 Qimmat · 💰 Arzon · 🆕 Yangi.
+1. **`/start`** — bot salomlashadi va **🛠 Katalog** tugmasini ko'rsatadi.
+2. Tugma Telegram Mini App'ni ochadi. Foydalanuvchi hali ro'yxatdan o'tmagan bo'lsa, avval qisqa forma chiqadi: ism-familiya, telefon, shahar va tuman. Keyin katalog ochiladi — kategoriyalar, xizmatlar, narxlar va rasmlar. Xizmatlarni saralash mumkin: Ommabop · Qimmat · Arzon · Yangi.
 3. Foydalanuvchi xizmatni tanlab, manzil/izoh qo'shib **Buyurtma berish** tugmasini bosadi.
 4. Buyurtma bazaga yoziladi va barcha adminlarga brigadalar ro'yxati bilan yuboriladi.
 5. Admin tugma orqali brigadani biriktiradi — mijozga ham, brigadaga ham xabar boradi.
@@ -31,13 +31,14 @@ app/
     states.py          FSM holatlari
     keyboards.py       klaviaturalar (WebApp tugmasi shu yerda)
     handlers/
-      registration.py  /start va ro'yxatdan o'tish
+      registration.py  /start va asosiy menyu
       catalog.py       WebApp'dan kelgan buyurtma, "mening buyurtmalarim"
       admin.py         buyurtmalar, brigadalar, brigadaga biriktirish
       catalog_admin.py katalogni boshqarish (qo'shish/tahrirlash/o'chirish)
   api/
     main.py            FastAPI ilova
-    routes.py          katalog endpointlari
+    routes.py          katalog va ro'yxatdan o'tish endpointlari
+    auth.py            Telegram initData imzosini tekshirish
     schemas.py         Pydantic modellari
 webapp/                React (Vite) Mini App
 static/images/         xizmat rasmlari
@@ -57,7 +58,7 @@ cp .env.example .env   # keyin .env ni to'ldiring
 | O'zgaruvchi | Izoh |
 |---|---|
 | `BOT_TOKEN` | [@BotFather](https://t.me/BotFather) dan olingan token |
-| `ADMIN_IDS` | Admin Telegram ID lari, vergul bilan (masalan `111111,222222`) |
+| `ADMIN_IDS` | Admin Telegram ID lari, vergul bilan (masalan `111111,222222`). O'z ID'ingizni [@userinfobot](https://t.me/userinfobot) dan bilib olasiz |
 | `WEBAPP_URL` | Mini App joylashgan **HTTPS** manzil (Telegram faqat HTTPS qabul qiladi) |
 | `DATABASE_URL` | Odatda o'zgartirish shart emas |
 
@@ -86,6 +87,22 @@ Bot:
 ```bash
 .venv/bin/python -m app.bot.main
 ```
+
+## Xavfsizlik: Mini App so'rovlari qanday tekshiriladi
+
+Ro'yxatdan o'tish Mini App ichida bo'lgani uchun, server so'rov haqiqatan ham
+Telegram'dan kelganini tekshirishi shart — aks holda istalgan odam boshqa
+foydalanuvchi nomidan yozuv yaratishi mumkin bo'lardi.
+
+Telegram har bir Mini App so'roviga bot tokeni bilan imzolangan `initData`
+qatorini qo'shadi. Frontend uni `Authorization: tma <initData>` sarlavhasida
+yuboradi, backend esa `app/api/auth.py` da HMAC-SHA256 imzosini qayta hisoblab
+solishtiradi va `auth_date` eskirmaganini tekshiradi. Imzo mos kelmasa yoki
+ma'lumot o'zgartirilgan bo'lsa — `401`.
+
+Shu sababli `BOT_TOKEN` maxfiy: u nafaqat botni boshqaradi, balki Mini App
+so'rovlarining haqiqiyligini ham tasdiqlaydi. Token tasodifan oshkor bo'lsa,
+[@BotFather](https://t.me/BotFather) da `/revoke` orqali yangilang.
 
 ## Mini App dizayni
 
@@ -194,6 +211,8 @@ mumkin.
 
 | Metod | Yo'l | Qaytaradi |
 |---|---|---|
+| GET | `/api/me` | Joriy foydalanuvchi ro'yxatdan o'tganmi (auth talab qiladi) |
+| POST | `/api/register` | Ro'yxatdan o'tkazish (auth talab qiladi) |
 | GET | `/api/categories` | Kategoriyalar ro'yxati |
 | GET | `/api/catalog` | Kategoriyalar + ichidagi xizmatlar |
 | GET | `/api/services?sort=&category_id=` | Saralangan xizmatlar (`sort`: `popular`, `expensive`, `cheap`, `new`; `category_id` bo'sh bo'lsa — hammasi) |

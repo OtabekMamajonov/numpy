@@ -43,7 +43,9 @@ async def process_webapp_order(message: Message) -> None:
     async with get_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         if not user.is_registered:
-            await message.answer("Avval ro'yxatdan o'ting: /start")
+            await message.answer(
+                "Avval ro'yxatdan o'ting — 🛠 Katalog tugmasini bosing."
+            )
             return
 
         service = await get_service(session, service_id)
@@ -85,7 +87,9 @@ async def my_orders(message: Message) -> None:
     async with get_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
         if not user.is_registered:
-            await message.answer("Avval ro'yxatdan o'ting: /start")
+            await message.answer(
+                "Avval ro'yxatdan o'ting — 🛠 Katalog tugmasini bosing."
+            )
             return
         orders = await get_user_orders(session, user.id)
 

@@ -310,6 +310,49 @@ body::before {
   border-color: rgba(47, 227, 194, 0.5);
 }
 
+/* Shahar tanlash ro'yxati */
+
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: calc(50% + 4px);
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.select:invalid,
+.select option[value=''] {
+  color: var(--placeholder);
+}
+
+.select option {
+  background: #0d1615;
+  color: var(--text);
+}
+
+.form-error {
+  margin: -4px 0 14px;
+  color: #ff7a7a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 /* --- Asosiy tugma --- */
 
 .submit {
@@ -330,6 +373,13 @@ body::before {
 
 .submit:active {
   transform: scale(0.99);
+}
+
+.submit:disabled {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: default;
 }
 
 /* --- Holatlar --- */

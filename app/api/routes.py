@@ -1,14 +1,17 @@
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.api.schemas import CategoryOut, CategoryWithServices, ServiceOut
+from app.api.auth import telegram_user
+from app.api.schemas import CategoryOut, CategoryWithServices, MeOut, RegisterIn, ServiceOut
 from app.db.crud import (
     SORT_POPULAR,
     get_categories_with_services,
+    get_or_create_user,
     get_service,
     get_services_by_category,
     list_services,
+    save_registration,
 )
 from app.db.database import get_session
 from app.db.models import Category
@@ -16,6 +19,40 @@ from app.db.models import Category
 SortOption = Literal["popular", "expensive", "cheap", "new"]
 
 router = APIRouter(prefix="/api")
+
+
+@router.get("/me", response_model=MeOut)
+async def me(tg_user: dict = Depends(telegram_user)):
+    """Joriy foydalanuvchi ro'yxatdan o'tganmi — Mini App shu asosda ekran tanlaydi."""
+    async with get_session() as session:
+        user = await get_or_create_user(session, tg_user["id"])
+    return MeOut(
+        is_registered=user.is_registered,
+        full_name=user.full_name,
+        phone=user.phone,
+        city=user.city,
+        district=user.district,
+    )
+
+
+@router.post("/register", response_model=MeOut)
+async def register(data: RegisterIn, tg_user: dict = Depends(telegram_user)):
+    async with get_session() as session:
+        user = await save_registration(
+            session,
+            telegram_id=tg_user["id"],
+            full_name=data.full_name.strip(),
+            phone=data.phone.strip(),
+            city=data.city.strip(),
+            district=data.district.strip(),
+        )
+    return MeOut(
+        is_registered=user.is_registered,
+        full_name=user.full_name,
+        phone=user.phone,
+        city=user.city,
+        district=user.district,
+    )
 
 
 @router.get("/categories", response_model=list[CategoryOut])

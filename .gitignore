@@ -6,3 +6,7 @@ __pycache__/
 
 node_modules/
 webapp/dist/
+
+# admin yuklagan rasmlar (runtime ma'lumot)
+static/images/*
+!static/images/.gitkeep

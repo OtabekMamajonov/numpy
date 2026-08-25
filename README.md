@@ -32,7 +32,8 @@ app/
     handlers/
       registration.py  /start va ro'yxatdan o'tish
       catalog.py       WebApp'dan kelgan buyurtma, "mening buyurtmalarim"
-      admin.py         admin buyruqlari, brigadaga biriktirish
+      admin.py         buyurtmalar, brigadalar, brigadaga biriktirish
+      catalog_admin.py katalogni boshqarish (qo'shish/tahrirlash/o'chirish)
   api/
     main.py            FastAPI ilova
     routes.py          katalog endpointlari
@@ -101,6 +102,7 @@ Vite dev-server `/api` so'rovlarini `localhost:8000` ga uzatadi.
 | Buyruq | Vazifasi |
 |---|---|
 | `/admin` | Admin menyusi |
+| `/catalog` | Katalogni boshqarish (qo'shish, tahrirlash, o'chirish) |
 | `/new_orders` | Yangi (biriktirilmagan) buyurtmalar |
 | `/brigades` | Brigadalar ro'yxati |
 | `/addbrigade` | Yangi brigada qo'shish |
@@ -108,12 +110,42 @@ Vite dev-server `/api` so'rovlarini `localhost:8000` ga uzatadi.
 Brigadaga botdan xabar borishi uchun `brigades.telegram_id` ustuniga brigada
 rahbarining Telegram ID sini yozib qo'ying.
 
-## Katalogni to'ldirish
+## Katalogni boshqarish
 
-`app/db/seed.py` dagi `DEMO_DATA` ni tahrirlang yoki bazaga to'g'ridan-to'g'ri
-`categories` / `services` yozuvlarini qo'shing. Rasmlar uchun faylni
-`static/images/` ga joylab, `services.image_url` ga `/static/images/fayl.jpg`
-ko'rinishida yo'l bering.
+Butun katalog **bot ichidan**, `/catalog` buyrug'i orqali boshqariladi — kodga
+tegish yoki bazani qo'lda tahrirlash shart emas.
+
+```
+/catalog
+ └── Kategoriyalar ro'yxati        [➕ Yangi kategoriya]
+      └── Kategoriya               [➕ Xizmat qo'shish] [✏️ Nomi] [🗑 O'chirish]
+           └── Xizmat              [✏️ Nomi] [💰 Narxi] [📝 Izoh] [🖼 Rasm]
+                                   [🔴 Nofaol qilish] [🗑 O'chirish]
+```
+
+**Xizmat qo'shish:** nomi → narxi → izoh → rasm. Izoh va rasm majburiy emas —
+«⏭ O'tkazib yuborish» tugmasi bilan tashlab ketish mumkin. Rasm oddiy surat
+sifatida yuboriladi, bot uni `static/images/` ga saqlaydi va Mini App'da
+avtomatik ko'rsatadi.
+
+**Tahrirlash:** xizmatni ochib, kerakli maydon tugmasini bosing va yangi qiymatni
+yuboring. Izoh yoki rasmni butunlay olib tashlash uchun «⏭ O'tkazib yuborish»
+tugmasidan foydalaning.
+
+**Nofaol qilish:** xizmatni o'chirmasdan katalogdan vaqtincha yashiradi
+(🔴). Keyin xohlagan paytda qayta yoqish mumkin.
+
+**O'chirish:** buyurtma tarixini buzmaydi. Agar xizmatga buyurtma berilgan
+bo'lsa, u butunlay o'chirilmaydi — faqat katalogdan yashiriladi, shunda eski
+buyurtmalar ro'yxati ishlashda davom etadi. Buyurtmasi yo'q xizmatlar rasmi
+bilan birga to'liq o'chadi. Kategoriya o'chirilganda ichidagi xizmatlar ham shu
+qoida bo'yicha o'chadi.
+
+Katalogda faqat **faol xizmatlar** va **kamida bitta faol xizmati bor
+kategoriyalar** ko'rinadi.
+
+Xohlasangiz, boshlang'ich demo katalogni `app/db/seed.py` orqali ham yuklashingiz
+mumkin.
 
 ## API endpointlari
 
@@ -125,6 +157,8 @@ ko'rinishida yo'l bering.
 | GET | `/api/services/{id}` | Bitta xizmat |
 
 ## Keyingi bosqichda qo'shish mumkin
+
+- Kategoriyalar tartibini o'zgartirish (yuqoriga/pastga)
 
 - Brigada reytingi va mijoz sharhlari
 - Click/Payme orqali to'lov

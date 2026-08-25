@@ -6,7 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from app.bot.handlers import admin, catalog, registration
+from app.bot.handlers import admin, catalog, catalog_admin, registration
 from app.config import settings
 from app.db.database import init_db
 
@@ -22,6 +22,7 @@ async def main() -> None:
     bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(admin.router)
+    dp.include_router(catalog_admin.router)
     dp.include_router(registration.router)
     dp.include_router(catalog.router)
 

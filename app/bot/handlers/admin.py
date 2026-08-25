@@ -1,3 +1,5 @@
+from html import escape
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -33,6 +35,7 @@ STATUS_LABELS = {
 async def admin_menu(message: Message) -> None:
     await message.answer(
         "🛠 Admin panel\n\n"
+        "/catalog — katalogni boshqarish (qo'shish, tahrirlash, o'chirish)\n"
         "/new_orders — yangi buyurtmalar\n"
         "/brigades — brigadalar ro'yxati\n"
         "/addbrigade — yangi brigada qo'shish"
@@ -49,8 +52,8 @@ async def new_orders(message: Message) -> None:
     lines = []
     for order in orders:
         lines.append(
-            f"#{order.id} — {order.service.name}\n"
-            f"Mijoz: {order.client.full_name} ({order.client.phone})\n"
+            f"#{order.id} — {escape(order.service.name)}\n"
+            f"Mijoz: {escape(order.client.full_name or '—')} ({escape(order.client.phone or '—')})\n"
         )
     await message.answer("\n".join(lines))
 
@@ -62,7 +65,10 @@ async def list_all_brigades(message: Message) -> None:
     if not brigades:
         await message.answer("Brigadalar hali qo'shilmagan. /addbrigade orqali qo'shing.")
         return
-    lines = [f"#{b.id} — {b.name} ({b.specialty or '—'}), tel: {b.phone or '—'}" for b in brigades]
+    lines = [
+        f"#{b.id} — {escape(b.name)} ({escape(b.specialty or '—')}), tel: {escape(b.phone or '—')}"
+        for b in brigades
+    ]
     await message.answer("\n".join(lines))
 
 
@@ -92,7 +98,7 @@ async def add_brigade_specialty(message: Message, state: FSMContext) -> None:
     async with get_session() as session:
         brigade = await create_brigade(session, data["name"], data["phone"], data["specialty"])
     await state.clear()
-    await message.answer(f"✅ Brigada qo'shildi: #{brigade.id} {brigade.name}")
+    await message.answer(f"✅ Brigada qo'shildi: #{brigade.id} {escape(brigade.name)}")
 
 
 @router.callback_query(F.data.startswith("assign:"))
@@ -108,7 +114,7 @@ async def assign_brigade_callback(callback: CallbackQuery) -> None:
         return
 
     await callback.message.edit_text(
-        callback.message.text + f"\n\n✅ Brigadaga berildi: {order.brigade.name}"
+        escape(callback.message.text) + f"\n\n✅ Brigadaga berildi: {escape(order.brigade.name)}"
     )
     await callback.answer("Brigadaga biriktirildi")
 
@@ -117,9 +123,10 @@ async def assign_brigade_callback(callback: CallbackQuery) -> None:
             await callback.bot.send_message(
                 order.brigade.telegram_id,
                 f"🆕 Sizga yangi ish biriktirildi!\n\n"
-                f"#{order.id} — {order.service.name}\n"
-                f"Mijoz: {order.client.full_name}, tel: {order.client.phone}\n"
-                f"Manzil: {order.client.city}, {order.client.district}",
+                f"#{order.id} — {escape(order.service.name)}\n"
+                f"Mijoz: {escape(order.client.full_name or '—')}, "
+                f"tel: {escape(order.client.phone or '—')}\n"
+                f"Manzil: {escape(order.client.city or '—')}, {escape(order.client.district or '—')}",
             )
         except Exception:
             pass
@@ -127,7 +134,8 @@ async def assign_brigade_callback(callback: CallbackQuery) -> None:
     try:
         await callback.bot.send_message(
             order.client.telegram_id,
-            f"👷 Buyurtmangiz #{order.id} brigadaga berildi: {order.brigade.name} ({order.brigade.phone})",
+            f"👷 Buyurtmangiz #{order.id} brigadaga berildi: "
+            f"{escape(order.brigade.name)} ({escape(order.brigade.phone or '—')})",
         )
     except Exception:
         pass

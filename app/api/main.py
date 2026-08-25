@@ -1,15 +1,14 @@
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
+from app.config import IMAGES_DIR, PROJECT_ROOT, STATIC_DIR
 from app.db.database import init_db
 
-STATIC_DIR = Path(__file__).resolve().parents[2] / "static"
-WEBAPP_DIST = Path(__file__).resolve().parents[2] / "webapp" / "dist"
+WEBAPP_DIST = PROJECT_ROOT / "webapp" / "dist"
 
 
 @asynccontextmanager
@@ -29,7 +28,7 @@ app.add_middleware(
 
 app.include_router(router)
 
-STATIC_DIR.mkdir(parents=True, exist_ok=True)
+IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 if WEBAPP_DIST.exists():

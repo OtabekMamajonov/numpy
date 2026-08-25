@@ -1,3 +1,5 @@
+from html import escape
+
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
@@ -18,7 +20,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
 
     if user.is_registered:
         await message.answer(
-            f"Xush kelibsiz, {user.full_name}! 👷\n\nQuyidagi menyudan foydalaning:",
+            f"Xush kelibsiz, {escape(user.full_name or '')}! 👷\n\nQuyidagi menyudan foydalaning:",
             reply_markup=main_menu_keyboard(),
         )
         return
@@ -77,7 +79,7 @@ async def process_district(message: Message, state: FSMContext) -> None:
         )
     await state.clear()
     await message.answer(
-        f"Rahmat, {user.full_name}! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. ✅\n\n"
+        f"Rahmat, {escape(user.full_name or '')}! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. ✅\n\n"
         "Endi katalogdan xizmat tanlashingiz mumkin:",
         reply_markup=main_menu_keyboard(),
     )

@@ -1,4 +1,5 @@
 import json
+from html import escape
 
 from aiogram import F, Router
 from aiogram.types import Message, WebAppData
@@ -46,8 +47,8 @@ async def process_webapp_order(message: Message) -> None:
             return
 
         service = await get_service(session, service_id)
-        if service is None:
-            await message.answer("Bunday xizmat topilmadi.")
+        if service is None or not service.is_active:
+            await message.answer("Bu xizmat hozircha mavjud emas. Katalogni qaytadan oching.")
             return
 
         order = await create_order(session, user.id, service_id, comment, address)
@@ -55,21 +56,21 @@ async def process_webapp_order(message: Message) -> None:
 
     await message.answer(
         f"✅ Buyurtmangiz qabul qilindi!\n\n"
-        f"Xizmat: {service.name}\n"
-        f"Narxi: {service.price}\n"
+        f"Xizmat: {escape(service.name)}\n"
+        f"Narxi: {escape(service.price)}\n"
         f"Holati: {STATUS_LABELS[order.status]}\n\n"
         "Tez orada operatorimiz siz bilan bog'lanadi."
     )
 
     admin_text = (
         f"🆕 Yangi buyurtma #{order.id}\n\n"
-        f"Mijoz: {user.full_name}\n"
-        f"Telefon: {user.phone}\n"
-        f"Manzil: {user.city}, {user.district}"
-        + (f" ({address})" if address else "")
-        + f"\n\nXizmat: {service.name}\n"
-        f"Narxi: {service.price}\n"
-        + (f"Izoh: {comment}\n" if comment else "")
+        f"Mijoz: {escape(user.full_name or '—')}\n"
+        f"Telefon: {escape(user.phone or '—')}\n"
+        f"Manzil: {escape(user.city or '—')}, {escape(user.district or '—')}"
+        + (f" ({escape(address)})" if address else "")
+        + f"\n\nXizmat: {escape(service.name)}\n"
+        f"Narxi: {escape(service.price)}\n"
+        + (f"Izoh: {escape(comment)}\n" if comment else "")
     )
     keyboard = brigade_assign_keyboard(order.id, brigades) if brigades else None
     for admin_id in settings.admin_id_list:
@@ -94,9 +95,9 @@ async def my_orders(message: Message) -> None:
 
     lines = ["📋 Sizning buyurtmalaringiz:\n"]
     for order in orders:
-        brigade_line = f"\nBrigada: {order.brigade.name}" if order.brigade else ""
+        brigade_line = f"\nBrigada: {escape(order.brigade.name)}" if order.brigade else ""
         lines.append(
-            f"#{order.id} — {order.service.name}\n"
+            f"#{order.id} — {escape(order.service.name)}\n"
             f"Holati: {STATUS_LABELS[order.status]}{brigade_line}\n"
         )
     await message.answer("\n".join(lines))

@@ -7,7 +7,7 @@ o'z brigadalaridan biriga biriktiradi.
 ## Nima qanday ishlaydi
 
 1. **`/start`** — foydalanuvchidan ism-familiya, telefon raqam, shahar va tuman so'raladi va bazaga saqlanadi.
-2. **🛠 Katalog** tugmasi Telegram Mini App'ni ochadi — kategoriyalar, xizmatlar, narxlar va rasmlar.
+2. **🛠 Katalog** tugmasi Telegram Mini App'ni ochadi — kategoriyalar, xizmatlar, narxlar va rasmlar. Xizmatlarni saralash mumkin: 🔥 Ommabop · 💎 Qimmat · 💰 Arzon · 🆕 Yangi.
 3. Foydalanuvchi xizmatni tanlab, manzil/izoh qo'shib **Buyurtma berish** tugmasini bosadi.
 4. Buyurtma bazaga yoziladi va barcha adminlarga brigadalar ro'yxati bilan yuboriladi.
 5. Admin tugma orqali brigadani biriktiradi — mijozga ham, brigadaga ham xabar boradi.
@@ -23,7 +23,8 @@ app/
   db/
     database.py        SQLAlchemy engine va sessiya
     models.py          User, Category, Service, Brigade, Order
-    crud.py            baza bilan ishlash funksiyalari
+    crud.py            baza bilan ishlash funksiyalari, saralash
+    pricing.py         narx matnidan sonni ajratib olish
     seed.py            demo katalog ma'lumotlari
   bot/
     main.py            bot ishga tushirish nuqtasi
@@ -144,6 +145,27 @@ qoida bo'yicha o'chadi.
 Katalogda faqat **faol xizmatlar** va **kamida bitta faol xizmati bor
 kategoriyalar** ko'rinadi.
 
+### Saralash qanday ishlaydi
+
+Mini App'da foydalanuvchi xizmatlarni tartiblashi mumkin:
+
+| Tugma | Tartib |
+|---|---|
+| 🔥 Ommabop | Buyurtmalar soni bo'yicha (ko'pdan kamga) |
+| 💎 Qimmat | Narxi bo'yicha (qimmatdan arzonga) |
+| 💰 Arzon | Narxi bo'yicha (arzondan qimmatga) |
+| 🆕 Yangi | Katalogga qo'shilgan tartibi bo'yicha (yangidan eskiga) |
+
+Saralash tanlangan kategoriya ichida ishlaydi; **Hammasi** tabida esa butun
+katalog bo'yicha.
+
+Narx erkin matn sifatida saqlanadi ("kv.metriga 80 000 so'm"), shuning uchun bot
+undan sonni avtomatik ajratib olib `services.price_amount` ustuniga yozadi va
+saralashda o'sha sondan foydalanadi. **Admin uchun hech narsa o'zgarmaydi** —
+narxni avvalgidek yozaverasiz. Agar matnda umuman son bo'lmasa (masalan
+"kelishilgan holda"), bunday xizmat narx bo'yicha saralashda ro'yxat oxirida
+turadi.
+
 Xohlasangiz, boshlang'ich demo katalogni `app/db/seed.py` orqali ham yuklashingiz
 mumkin.
 
@@ -153,6 +175,7 @@ mumkin.
 |---|---|---|
 | GET | `/api/categories` | Kategoriyalar ro'yxati |
 | GET | `/api/catalog` | Kategoriyalar + ichidagi xizmatlar |
+| GET | `/api/services?sort=&category_id=` | Saralangan xizmatlar (`sort`: `popular`, `expensive`, `cheap`, `new`; `category_id` bo'sh bo'lsa — hammasi) |
 | GET | `/api/categories/{id}/services` | Kategoriyadagi xizmatlar |
 | GET | `/api/services/{id}` | Bitta xizmat |
 

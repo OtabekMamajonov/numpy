@@ -3,6 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models import Brigade, Category, Order, OrderStatus, Service, User
+from app.db.pricing import parse_price_amount
+
+# Katalogni saralash variantlari
+SORT_POPULAR = "popular"
+SORT_EXPENSIVE = "expensive"
+SORT_CHEAP = "cheap"
+SORT_NEW = "new"
+SORT_OPTIONS = (SORT_POPULAR, SORT_EXPENSIVE, SORT_CHEAP, SORT_NEW)
 
 
 async def get_or_create_user(session: AsyncSession, telegram_id: int) -> User:
@@ -128,6 +136,7 @@ async def create_service(
         category_id=category_id,
         name=name,
         price=price,
+        price_amount=parse_price_amount(price),
         description=description,
         image_url=image_url,
     )
@@ -146,6 +155,9 @@ async def update_service(session: AsyncSession, service_id: int, **fields) -> Se
     for key, value in fields.items():
         if key in allowed:
             setattr(service, key, value)
+    if "price" in fields:
+        # narx o'zgarsa, saralash uchun ishlatiladigan son ham yangilanadi
+        service.price_amount = parse_price_amount(service.price)
     await session.commit()
     await session.refresh(service)
     return service
@@ -166,6 +178,43 @@ async def delete_service(session: AsyncSession, service_id: int) -> str:
     await session.delete(service)
     await session.commit()
     return "deleted"
+
+
+def _order_by_sort(sort: str):
+    """Saralash turini SQL ORDER BY ifodalariga aylantiradi."""
+    if sort == SORT_EXPENSIVE:
+        # narxi ko'rsatilmagan xizmatlar oxirida turadi
+        return [Service.price_amount.is_(None), Service.price_amount.desc(), Service.id.desc()]
+    if sort == SORT_CHEAP:
+        return [Service.price_amount.is_(None), Service.price_amount.asc(), Service.id.desc()]
+    if sort == SORT_NEW:
+        return [Service.id.desc()]
+    # SORT_POPULAR — buyurtmalar soni bo'yicha
+    orders_count = (
+        select(func.count(Order.id))
+        .where(Order.service_id == Service.id)
+        .correlate(Service)
+        .scalar_subquery()
+    )
+    return [orders_count.desc(), Service.id.desc()]
+
+
+async def list_services(
+    session: AsyncSession, category_id: int | None = None, sort: str = SORT_POPULAR
+) -> list[Service]:
+    """Katalog uchun faol xizmatlar, tanlangan tartibda.
+
+    category_id=None bo'lsa barcha kategoriyalardagi xizmatlar qaytariladi.
+    """
+    if sort not in SORT_OPTIONS:
+        sort = SORT_POPULAR
+
+    query = select(Service).where(Service.is_active.is_(True))
+    if category_id is not None:
+        query = query.where(Service.category_id == category_id)
+
+    result = await session.execute(query.order_by(*_order_by_sort(sort)))
+    return list(result.scalars().all())
 
 
 async def get_categories_with_services(

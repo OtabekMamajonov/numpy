@@ -48,6 +48,8 @@ class Service(Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[str] = mapped_column(String(64))
+    # Narx matnidan ajratilgan son — faqat saralash uchun ishlatiladi
+    price_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
 

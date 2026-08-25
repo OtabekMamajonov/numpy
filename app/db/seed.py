@@ -4,8 +4,8 @@ Ishga tushirish: python -m app.db.seed
 """
 import asyncio
 
+from app.db import crud
 from app.db.database import async_session, init_db
-from app.db.models import Category, Service
 
 DEMO_DATA = [
     (
@@ -38,21 +38,17 @@ DEMO_DATA = [
 async def seed() -> None:
     await init_db()
     async with async_session() as session:
-        for cat_index, (cat_name, services) in enumerate(DEMO_DATA):
-            category = Category(name=cat_name, position=cat_index)
-            session.add(category)
-            await session.flush()
+        # crud orqali qo'shiladi, shunda price_amount ham to'g'ri hisoblanadi
+        for cat_name, services in DEMO_DATA:
+            category = await crud.create_category(session, cat_name)
             for name, description, price in services:
-                session.add(
-                    Service(
-                        category_id=category.id,
-                        name=name,
-                        description=description,
-                        price=price,
-                        image_url=None,
-                    )
+                await crud.create_service(
+                    session,
+                    category_id=category.id,
+                    name=name,
+                    price=price,
+                    description=description,
                 )
-        await session.commit()
     print("Demo katalog muvaffaqiyatli qo'shildi.")
 
 

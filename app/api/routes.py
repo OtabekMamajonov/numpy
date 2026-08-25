@@ -1,9 +1,19 @@
-from fastapi import APIRouter, HTTPException
+from typing import Literal
+
+from fastapi import APIRouter, HTTPException, Query
 
 from app.api.schemas import CategoryOut, CategoryWithServices, ServiceOut
-from app.db.crud import get_categories_with_services, get_service, get_services_by_category
+from app.db.crud import (
+    SORT_POPULAR,
+    get_categories_with_services,
+    get_service,
+    get_services_by_category,
+    list_services,
+)
 from app.db.database import get_session
 from app.db.models import Category
+
+SortOption = Literal["popular", "expensive", "cheap", "new"]
 
 router = APIRouter(prefix="/api")
 
@@ -18,6 +28,15 @@ async def list_categories() -> list[Category]:
 async def full_catalog() -> list[Category]:
     async with get_session() as session:
         return await get_categories_with_services(session)
+
+
+@router.get("/services", response_model=list[ServiceOut])
+async def sorted_services(
+    category_id: int | None = Query(default=None, description="Bo'sh bo'lsa — barcha kategoriyalar"),
+    sort: SortOption = Query(default=SORT_POPULAR),
+):
+    async with get_session() as session:
+        return await list_services(session, category_id=category_id, sort=sort)
 
 
 @router.get("/categories/{category_id}/services", response_model=list[ServiceOut])

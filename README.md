@@ -125,6 +125,37 @@ Dizayn qat'iy to'q mavzuda — Telegram'ning yorug'/to'q sozlamasiga
 moslashmaydi, chunki butun ko'rinish shu palitraga qurilgan. Telegram
 sarlavhasi ham ilova foni bilan bir xil rangga bo'yaladi.
 
+## Serverga joylashtirish
+
+Bot va API **bitta jarayonda** ishlaydi (`app/main.py`), chunki ikkalasi bir xil
+SQLite faylini ko'rishi kerak — alohida konteynerlarda ikki xil baza bo'lib
+qolardi:
+
+```bash
+.venv/bin/python -m app.main
+```
+
+Portni `PORT` o'zgaruvchisi belgilaydi (server odatda o'zi beradi).
+
+**Doimiy disk shart.** Konteyner fayl tizimi vaqtinchalik: har qayta
+joylashtirishda baza va admin yuklagan rasmlar o'chib ketadi. Shuning uchun
+doimiy diskni ulab, `DATA_DIR` ni o'shanga yo'naltiring:
+
+```
+DATA_DIR=/data
+```
+
+Baza `/data/bot.db` da, rasmlar `/data/images/` da saqlanadi.
+
+Joylashtirgandan keyin:
+
+1. Olingan HTTPS manzilni `WEBAPP_URL` ga yozing va xizmatni qayta ishga tushiring
+2. [@BotFather](https://t.me/BotFather) da `/setmenubutton` orqali shu manzilni Mini App sifatida ulang
+3. `ADMIN_IDS` ga o'z Telegram ID'ingizni yozing ([@userinfobot](https://t.me/userinfobot) aytadi)
+
+`nixpacks.toml` Railway uchun tayyor: Python va Node o'rnatiladi, Mini App
+build qilinadi va `python -m app.main` ishga tushadi.
+
 ### Frontend ustida ishlash
 
 ```bash

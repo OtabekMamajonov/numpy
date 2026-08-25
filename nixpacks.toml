@@ -1,0 +1,18 @@
+# Railway (Nixpacks) uchun qurish sozlamalari:
+# backend Python'da, Mini App esa Node bilan build qilinadi.
+
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20"]
+
+[phases.install]
+cmds = [
+  "python -m venv /opt/venv",
+  "/opt/venv/bin/pip install --no-cache-dir -r requirements.txt",
+  "npm --prefix webapp ci",
+]
+
+[phases.build]
+cmds = ["npm --prefix webapp run build"]
+
+[start]
+cmd = "/opt/venv/bin/python -m app.main"

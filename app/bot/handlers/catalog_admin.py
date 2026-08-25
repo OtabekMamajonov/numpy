@@ -16,7 +16,7 @@ from app.bot.keyboards import (
     skip_keyboard,
 )
 from app.bot.states import AddCategory, AddService, EditServiceField, RenameCategory
-from app.config import IMAGES_DIR, settings
+from app.config import settings
 from app.db import crud
 from app.db.database import get_session
 from app.db.models import Service
@@ -38,9 +38,9 @@ FIELD_PROMPTS = {
 
 async def _save_photo(message: Message, prefix: str) -> str:
     photo = message.photo[-1]
-    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    settings.images_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{prefix}_{photo.file_unique_id}.jpg"
-    await message.bot.download(photo.file_id, destination=IMAGES_DIR / filename)
+    await message.bot.download(photo.file_id, destination=settings.images_dir / filename)
     return f"/static/images/{filename}"
 
 
@@ -48,7 +48,7 @@ def _delete_image_file(image_url: str | None) -> None:
     """Eski rasm faylini diskdan o'chiradi (faqat static/images ichidagilarni)."""
     if not image_url or not image_url.startswith("/static/images/"):
         return
-    images_root = IMAGES_DIR.resolve()
+    images_root = settings.images_dir.resolve()
     path = (images_root / Path(image_url).name).resolve()
     try:
         if path.is_relative_to(images_root) and path.is_file():

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowLeftIcon, ToolIcon } from './icons'
 
 const tg = window.Telegram?.WebApp
 
@@ -21,15 +22,21 @@ export default function ServiceDetail({ service, onBack }) {
 
   return (
     <div className="app">
-      <button className="back" onClick={onBack}>
-        ← Orqaga
+      <button className="back" onClick={onBack} aria-label="Orqaga">
+        <ArrowLeftIcon />
       </button>
 
-      {service.image_url && <img src={service.image_url} alt={service.name} className="hero" />}
+      {service.image_url ? (
+        <img src={service.image_url} alt={service.name} className="hero" />
+      ) : (
+        <div className="hero hero-placeholder">
+          <ToolIcon size={44} />
+        </div>
+      )}
 
-      <h2>{service.name}</h2>
-      <span className="price big">{service.price}</span>
-      {service.description && <p className="desc">{service.description}</p>}
+      <h2 className="detail-title">{service.name}</h2>
+      <span className="price-tag">{service.price}</span>
+      {service.description && <p className="detail-desc">{service.description}</p>}
 
       <label className="label">
         Manzil (ixtiyoriy)

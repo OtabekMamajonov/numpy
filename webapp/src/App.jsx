@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { fetchCategories, fetchServices } from './api'
 import ServiceDetail from './ServiceDetail'
+import { ToolIcon } from './icons'
 
 const SORTS = [
-  { key: 'popular', label: '🔥 Ommabop' },
-  { key: 'expensive', label: '💎 Qimmat' },
-  { key: 'cheap', label: '💰 Arzon' },
-  { key: 'new', label: '🆕 Yangi' },
+  { key: 'popular', label: 'Ommabop' },
+  { key: 'expensive', label: 'Qimmat' },
+  { key: 'cheap', label: 'Arzon' },
+  { key: 'new', label: 'Yangi' },
 ]
 
 export default function App() {
@@ -93,7 +94,13 @@ export default function App() {
       <div className={busy ? 'list busy' : 'list'}>
         {services.map((service) => (
           <button key={service.id} className="card" onClick={() => setSelectedService(service)}>
-            {service.image_url && <img src={service.image_url} alt={service.name} className="thumb" />}
+            {service.image_url ? (
+              <img src={service.image_url} alt={service.name} className="thumb" />
+            ) : (
+              <div className="thumb thumb-placeholder">
+                <ToolIcon />
+              </div>
+            )}
             <div className="card-body">
               <h3>{service.name}</h3>
               {service.description && <p className="desc">{service.description}</p>}

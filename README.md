@@ -87,6 +87,27 @@ Bot:
 .venv/bin/python -m app.bot.main
 ```
 
+## Mini App dizayni
+
+Mini App to'q (dark) mavzuda ishlangan: deyarli qora fon, ekran tepasida
+to'q-yashil nur, urg'u rangi sifatida yorqin nane (mint) rangi, dumaloq
+burchakli kartochkalar va pill shaklidagi tugmalar.
+
+Ranglar `webapp/src/styles.css` faylining boshidagi CSS o'zgaruvchilarida
+yig'ilgan — mavzuni o'zgartirish uchun shu yerdagi qiymatlarni tahrirlash
+yetarli:
+
+| O'zgaruvchi | Vazifasi |
+|---|---|
+| `--bg` | Asosiy fon |
+| `--accent`, `--accent-top`, `--accent-bottom` | Urg'u (tugmalar, narxlar) |
+| `--surface`, `--border` | Kartochka va maydonlar |
+| `--text`, `--muted` | Matn ranglari |
+
+Dizayn qat'iy to'q mavzuda — Telegram'ning yorug'/to'q sozlamasiga
+moslashmaydi, chunki butun ko'rinish shu palitraga qurilgan. Telegram
+sarlavhasi ham ilova foni bilan bir xil rangga bo'yaladi.
+
 ### Frontend ustida ishlash
 
 ```bash

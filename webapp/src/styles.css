@@ -1,0 +1,170 @@
+:root {
+  --bg: var(--tg-theme-bg-color, #ffffff);
+  --text: var(--tg-theme-text-color, #1a1a1a);
+  --hint: var(--tg-theme-hint-color, #7d7d7d);
+  --card: var(--tg-theme-secondary-bg-color, #f4f4f6);
+  --accent: var(--tg-theme-button-color, #2481cc);
+  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  padding: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.header h1 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  margin: 0 0 16px;
+  color: var(--hint);
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.tab {
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 16px;
+  padding: 8px 14px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  border: none;
+  border-radius: 12px;
+  background: var(--card);
+  padding: 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.card-body h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.desc {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.price.big {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.price.big + .desc {
+  margin-bottom: 20px;
+}
+
+.hero {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.back {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 15px;
+  padding: 0 0 12px;
+  cursor: pointer;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  color: var(--hint);
+  margin-bottom: 12px;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--card);
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.submit {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.state {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--hint);
+}
+
+.state.error {
+  color: #d64545;
+}

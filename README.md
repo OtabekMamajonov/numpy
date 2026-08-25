@@ -1,1 +1,133 @@
-# numpy
+# Qurilish xizmatlari — Telegram bot + Mini App
+
+Qurilish ishlari uchun vositachi platforma. Mijozlar bot orqali ro'yxatdan o'tadi,
+Mini App katalogidan xizmat tanlab buyurtma beradi; admin buyurtmani qabul qilib,
+o'z brigadalaridan biriga biriktiradi.
+
+## Nima qanday ishlaydi
+
+1. **`/start`** — foydalanuvchidan ism-familiya, telefon raqam, shahar va tuman so'raladi va bazaga saqlanadi.
+2. **🛠 Katalog** tugmasi Telegram Mini App'ni ochadi — kategoriyalar, xizmatlar, narxlar va rasmlar.
+3. Foydalanuvchi xizmatni tanlab, manzil/izoh qo'shib **Buyurtma berish** tugmasini bosadi.
+4. Buyurtma bazaga yoziladi va barcha adminlarga brigadalar ro'yxati bilan yuboriladi.
+5. Admin tugma orqali brigadani biriktiradi — mijozga ham, brigadaga ham xabar boradi.
+6. Mijoz **📋 Mening buyurtmalarim** orqali holatni kuzatadi.
+
+Buyurtma holatlari: `new` → `assigned` → `in_progress` → `done` (yoki `cancelled`).
+
+## Loyiha tuzilishi
+
+```
+app/
+  config.py            .env sozlamalari
+  db/
+    database.py        SQLAlchemy engine va sessiya
+    models.py          User, Category, Service, Brigade, Order
+    crud.py            baza bilan ishlash funksiyalari
+    seed.py            demo katalog ma'lumotlari
+  bot/
+    main.py            bot ishga tushirish nuqtasi
+    states.py          FSM holatlari
+    keyboards.py       klaviaturalar (WebApp tugmasi shu yerda)
+    handlers/
+      registration.py  /start va ro'yxatdan o'tish
+      catalog.py       WebApp'dan kelgan buyurtma, "mening buyurtmalarim"
+      admin.py         admin buyruqlari, brigadaga biriktirish
+  api/
+    main.py            FastAPI ilova
+    routes.py          katalog endpointlari
+    schemas.py         Pydantic modellari
+webapp/                React (Vite) Mini App
+static/images/         xizmat rasmlari
+```
+
+## O'rnatish
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+cp .env.example .env   # keyin .env ni to'ldiring
+```
+
+`.env` da to'ldirilishi kerak:
+
+| O'zgaruvchi | Izoh |
+|---|---|
+| `BOT_TOKEN` | [@BotFather](https://t.me/BotFather) dan olingan token |
+| `ADMIN_IDS` | Admin Telegram ID lari, vergul bilan (masalan `111111,222222`) |
+| `WEBAPP_URL` | Mini App joylashgan **HTTPS** manzil (Telegram faqat HTTPS qabul qiladi) |
+| `DATABASE_URL` | Odatda o'zgartirish shart emas |
+
+## Ishga tushirish
+
+Demo katalogni bazaga yuklash (bir marta):
+
+```bash
+.venv/bin/python -m app.db.seed
+```
+
+Mini App'ni build qilish:
+
+```bash
+cd webapp && npm install && npm run build
+```
+
+Backend (katalog API + build qilingan Mini App'ni tarqatadi):
+
+```bash
+.venv/bin/uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+```
+
+Bot:
+
+```bash
+.venv/bin/python -m app.bot.main
+```
+
+### Frontend ustida ishlash
+
+```bash
+cd webapp && npm run dev
+```
+
+Vite dev-server `/api` so'rovlarini `localhost:8000` ga uzatadi.
+
+> Telegram Mini App faqat HTTPS orqali ochiladi. Lokal test uchun `ngrok http 8000`
+> kabi tunnel ishlatib, olingan HTTPS manzilni `WEBAPP_URL` ga yozing.
+
+## Admin buyruqlari
+
+| Buyruq | Vazifasi |
+|---|---|
+| `/admin` | Admin menyusi |
+| `/new_orders` | Yangi (biriktirilmagan) buyurtmalar |
+| `/brigades` | Brigadalar ro'yxati |
+| `/addbrigade` | Yangi brigada qo'shish |
+
+Brigadaga botdan xabar borishi uchun `brigades.telegram_id` ustuniga brigada
+rahbarining Telegram ID sini yozib qo'ying.
+
+## Katalogni to'ldirish
+
+`app/db/seed.py` dagi `DEMO_DATA` ni tahrirlang yoki bazaga to'g'ridan-to'g'ri
+`categories` / `services` yozuvlarini qo'shing. Rasmlar uchun faylni
+`static/images/` ga joylab, `services.image_url` ga `/static/images/fayl.jpg`
+ko'rinishida yo'l bering.
+
+## API endpointlari
+
+| Metod | Yo'l | Qaytaradi |
+|---|---|---|
+| GET | `/api/categories` | Kategoriyalar ro'yxati |
+| GET | `/api/catalog` | Kategoriyalar + ichidagi xizmatlar |
+| GET | `/api/categories/{id}/services` | Kategoriyadagi xizmatlar |
+| GET | `/api/services/{id}` | Bitta xizmat |
+
+## Keyingi bosqichda qo'shish mumkin
+
+- Brigada reytingi va mijoz sharhlari
+- Click/Payme orqali to'lov
+- Veb admin panel (statistika bilan)
+- Ko'p tillilik (o'zbek / rus)
+- Telegram `location` orqali aniq manzil

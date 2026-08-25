@@ -1,0 +1,102 @@
+import json
+
+from aiogram import F, Router
+from aiogram.types import Message, WebAppData
+
+from app.bot.keyboards import brigade_assign_keyboard
+from app.config import settings
+from app.db.crud import (
+    create_order,
+    get_or_create_user,
+    get_service,
+    get_user_orders,
+    list_brigades,
+)
+from app.db.database import get_session
+from app.db.models import OrderStatus
+
+router = Router(name="catalog")
+
+STATUS_LABELS = {
+    OrderStatus.NEW: "🆕 Yangi",
+    OrderStatus.ASSIGNED: "👷 Brigadaga berildi",
+    OrderStatus.IN_PROGRESS: "🔧 Jarayonda",
+    OrderStatus.DONE: "✅ Bajarildi",
+    OrderStatus.CANCELLED: "❌ Bekor qilindi",
+}
+
+
+@router.message(F.web_app_data)
+async def process_webapp_order(message: Message) -> None:
+    data: WebAppData = message.web_app_data
+    try:
+        payload = json.loads(data.data)
+        service_id = int(payload["service_id"])
+    except (KeyError, ValueError, TypeError, json.JSONDecodeError):
+        await message.answer("Buyurtmada xatolik yuz berdi, qaytadan urinib ko'ring.")
+        return
+
+    comment = payload.get("comment")
+    address = payload.get("address")
+
+    async with get_session() as session:
+        user = await get_or_create_user(session, message.from_user.id)
+        if not user.is_registered:
+            await message.answer("Avval ro'yxatdan o'ting: /start")
+            return
+
+        service = await get_service(session, service_id)
+        if service is None:
+            await message.answer("Bunday xizmat topilmadi.")
+            return
+
+        order = await create_order(session, user.id, service_id, comment, address)
+        brigades = await list_brigades(session)
+
+    await message.answer(
+        f"✅ Buyurtmangiz qabul qilindi!\n\n"
+        f"Xizmat: {service.name}\n"
+        f"Narxi: {service.price}\n"
+        f"Holati: {STATUS_LABELS[order.status]}\n\n"
+        "Tez orada operatorimiz siz bilan bog'lanadi."
+    )
+
+    admin_text = (
+        f"🆕 Yangi buyurtma #{order.id}\n\n"
+        f"Mijoz: {user.full_name}\n"
+        f"Telefon: {user.phone}\n"
+        f"Manzil: {user.city}, {user.district}"
+        + (f" ({address})" if address else "")
+        + f"\n\nXizmat: {service.name}\n"
+        f"Narxi: {service.price}\n"
+        + (f"Izoh: {comment}\n" if comment else "")
+    )
+    keyboard = brigade_assign_keyboard(order.id, brigades) if brigades else None
+    for admin_id in settings.admin_id_list:
+        try:
+            await message.bot.send_message(admin_id, admin_text, reply_markup=keyboard)
+        except Exception:
+            continue
+
+
+@router.message(F.text == "📋 Mening buyurtmalarim")
+async def my_orders(message: Message) -> None:
+    async with get_session() as session:
+        user = await get_or_create_user(session, message.from_user.id)
+        if not user.is_registered:
+            await message.answer("Avval ro'yxatdan o'ting: /start")
+            return
+        orders = await get_user_orders(session, user.id)
+
+    if not orders:
+        await message.answer("Sizda hali buyurtmalar yo'q. Katalogdan xizmat tanlang.")
+        return
+
+    lines = ["📋 Sizning buyurtmalaringiz:\n"]
+    for order in orders:
+        brigade_line = f"\nBrigada: {order.brigade.name}" if order.brigade else ""
+        lines.append(
+            f"#{order.id} — {order.service.name}\n"
+            f"Holati: {STATUS_LABELS[order.status]}{brigade_line}\n"
+        )
+    await message.answer("\n".join(lines))

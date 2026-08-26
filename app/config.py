@@ -1,9 +1,39 @@
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# libpq (psql) tushunadigan, lekin asyncpg qabul qilmaydigan parametrlar.
+# Hostinglar (masalan Neon) manzilga shularni qo'shib beradi.
+_LIBPQ_ONLY_PARAMS = {"channel_binding", "gssencmode", "target_session_attrs", "options"}
+
+
+def _adapt_asyncpg_url(url: str) -> str:
+    """Manzilni asyncpg tushunadigan ko'rinishga keltiradi.
+
+    `?sslmode=require` bilan asyncpg "unexpected keyword argument 'sslmode'"
+    deb xato beradi, shuning uchun u `ssl=` ga o'giriladi.
+    """
+    parts = urlsplit(url)
+    if not parts.query:
+        return url
+
+    kept: list[tuple[str, str]] = []
+    ssl_value: str | None = None
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        lowered = key.lower()
+        if lowered == "sslmode":
+            ssl_value = value
+        elif lowered not in _LIBPQ_ONLY_PARAMS:
+            kept.append((key, value))
+
+    if ssl_value and not any(k.lower() == "ssl" for k, _ in kept):
+        kept.append(("ssl", ssl_value))
+
+    return urlunsplit(parts._replace(query=urlencode(kept)))
 
 
 class Settings(BaseSettings):
@@ -69,6 +99,8 @@ class Settings(BaseSettings):
             url = "postgresql+asyncpg://" + url[len("postgresql://") :]
         if url.startswith("sqlite://"):
             url = "sqlite+aiosqlite://" + url[len("sqlite://") :]
+        if url.startswith("postgresql+asyncpg://"):
+            url = _adapt_asyncpg_url(url)
         return url
 
     @property

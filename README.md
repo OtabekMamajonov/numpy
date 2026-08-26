@@ -44,6 +44,47 @@ webapp/                React (Vite) Mini App
 static/images/         xizmat rasmlari
 ```
 
+## Tez sinash (kompyuterda, bepul)
+
+Telegram Mini App'ni faqat **HTTPS** manzildan ochadi, shuning uchun lokal
+serverni [ngrok](https://ngrok.com/download) orqali tashqariga chiqaramiz.
+
+**1.** `.env` faylini yarating:
+
+```
+BOT_TOKEN=<@BotFather bergan token>
+ADMIN_IDS=<sizning Telegram ID'ingiz>
+WEBAPP_URL=
+```
+
+**2.** Alohida terminalda ngrok'ni yoqing:
+
+```bash
+ngrok http 8000
+```
+
+Chiqqan `https://xxxx.ngrok-free.app` manzilini nusxalang.
+
+**3.** Uni `.env` dagi `WEBAPP_URL` ga yozing:
+
+```
+WEBAPP_URL=https://xxxx.ngrok-free.app
+```
+
+**4.** Loyihani ishga tushiring:
+
+```bash
+./run.sh
+```
+
+Skript o'zi: Python muhitini yaratadi, bog'liqliklarni o'rnatadi, Mini App'ni
+build qiladi, demo katalogni yuklaydi va bot bilan API'ni yoqadi.
+
+**5.** Telegram'da botingizga `/start` yozing va **🛠 Katalog** tugmasini bosing.
+
+> ngrok manzili har safar yangilanadi — qayta yoqqaningizda `WEBAPP_URL` ni
+> yangilab, `./run.sh` ni qayta ishga tushiring.
+
 ## O'rnatish
 
 ```bash

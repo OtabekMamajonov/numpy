@@ -130,7 +130,8 @@ async def create_service(
     name: str,
     price: str,
     description: str | None = None,
-    image_url: str | None = None,
+    image_data: bytes | None = None,
+    image_mime: str | None = None,
 ) -> Service:
     service = Service(
         category_id=category_id,
@@ -138,7 +139,8 @@ async def create_service(
         price=price,
         price_amount=parse_price_amount(price),
         description=description,
-        image_url=image_url,
+        image_data=image_data,
+        image_mime=image_mime,
     )
     session.add(service)
     await session.commit()
@@ -147,8 +149,8 @@ async def create_service(
 
 
 async def update_service(session: AsyncSession, service_id: int, **fields) -> Service | None:
-    """name / price / description / image_url / is_active maydonlarini yangilaydi."""
-    allowed = {"name", "price", "description", "image_url", "is_active"}
+    """name / price / description / image_data / image_mime / is_active maydonlarini yangilaydi."""
+    allowed = {"name", "price", "description", "image_data", "image_mime", "image_url", "is_active"}
     service = await get_service(session, service_id)
     if service is None:
         return None

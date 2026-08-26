@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.api import webhook
 from app.api.routes import router
-from app.config import PROJECT_ROOT, settings
+from app.config import PROJECT_ROOT
 from app.db.database import init_db
 
 WEBAPP_DIST = PROJECT_ROOT / "webapp" / "dist"
@@ -27,10 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
-
-# Admin yuklagan rasmlar doimiy papkadan tarqatiladi
-settings.images_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static/images", StaticFiles(directory=settings.images_dir), name="images")
+app.include_router(webhook.router)
 
 if WEBAPP_DIST.exists():
     app.mount("/", StaticFiles(directory=WEBAPP_DIST, html=True), name="webapp")

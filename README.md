@@ -35,10 +35,12 @@ app/
       catalog.py       WebApp'dan kelgan buyurtma, "mening buyurtmalarim"
       admin.py         buyurtmalar, brigadalar, brigadaga biriktirish
       catalog_admin.py katalogni boshqarish (qo'shish/tahrirlash/o'chirish)
+  main.py              bot + API'ni birga ishga tushirish
   api/
     main.py            FastAPI ilova
     routes.py          katalog va ro'yxatdan o'tish endpointlari
     auth.py            Telegram initData imzosini tekshirish
+    webhook.py         Telegram webhook endpointi
     schemas.py         Pydantic modellari
 webapp/                React (Vite) Mini App
 static/images/         xizmat rasmlari
@@ -166,6 +168,46 @@ Dizayn qat'iy to'q mavzuda — Telegram'ning yorug'/to'q sozlamasiga
 moslashmaydi, chunki butun ko'rinish shu palitraga qurilgan. Telegram
 sarlavhasi ham ilova foni bilan bir xil rangga bo'yaladi.
 
+## Bepul joylashtirish (telefondan ham bo'ladi)
+
+Ikkita bepul xizmat kifoya: **Neon** (Postgres) va **Render** (ilova). Ikkalasi
+ham brauzerdan sozlanadi.
+
+### 1. Bepul Postgres
+
+[neon.tech](https://neon.tech) da ro'yxatdan o'ting → yangi loyiha yarating →
+**Connection string** ni nusxalang (`postgres://...` ko'rinishida).
+
+> Nega Postgres? Bepul hostinglarda doimiy disk bo'lmaydi — SQLite fayli har
+> qayta joylashtirishda o'chib ketardi va foydalanuvchilar qayta ro'yxatdan
+> o'tishga majbur bo'lardi.
+
+### 2. Ilovani joylashtirish
+
+[render.com](https://render.com) da ro'yxatdan o'ting →
+**New → Blueprint** → shu GitHub reponi tanlang → branchni tanlang.
+
+Render `render.yaml` ni o'qib xizmatni o'zi sozlaydi. Sizdan faqat uchta
+qiymat so'raydi:
+
+| O'zgaruvchi | Qiymat |
+|---|---|
+| `BOT_TOKEN` | @BotFather bergan token |
+| `ADMIN_IDS` | Sizning Telegram ID'ingiz ([@userinfobot](https://t.me/userinfobot) aytadi) |
+| `DATABASE_URL` | Neon bergan connection string |
+
+Qolganini Render o'zi to'ldiradi: manzil, webhook kaliti va demo katalog.
+
+### 3. Tayyor
+
+Deploy tugagach Telegram'da botga `/start` yozing va **🛠 Katalog** tugmasini
+bosing. `WEBAPP_URL` ni qo'lda yozish shart emas — Render manzilni o'zi beradi.
+
+> **Bepul tarifning kamchiligi:** xizmat 15 daqiqa harakatsizlikdan keyin
+> uxlaydi. Shu sababli bot **webhook** rejimida ishlaydi — Telegram
+> yangilanishni yuborganda xizmat uyg'onadi. Uzoq tanaffusdan keyingi birinchi
+> xabarga javob ~1 daqiqa kechikishi mumkin, keyingilari darhol ishlaydi.
+
 ## Serverga joylashtirish
 
 Bot va API **bitta jarayonda** ishlaydi (`app/main.py`), chunki ikkalasi bir xil
@@ -178,24 +220,26 @@ qolardi:
 
 Portni `PORT` o'zgaruvchisi belgilaydi (server odatda o'zi beradi).
 
-**Doimiy disk shart.** Konteyner fayl tizimi vaqtinchalik: har qayta
-joylashtirishda baza va admin yuklagan rasmlar o'chib ketadi. Shuning uchun
-doimiy diskni ulab, `DATA_DIR` ni o'shanga yo'naltiring:
+**Ma'lumotlar qayerda saqlanadi.** Konteyner fayl tizimi vaqtinchalik, shuning
+uchun:
 
-```
-DATA_DIR=/data
-```
+- **Baza** — `DATABASE_URL` ko'rsatilsa Postgres'da. Ko'rsatilmasa SQLite
+  (`DATA_DIR` ichida), bu esa doimiy disk ulangan hostlarda yoki lokalda mos.
+- **Xizmat rasmlari** — bazada saqlanadi (fayl tizimida emas), shuning uchun
+  qayta joylashtirishda yo'qolmaydi.
 
-Baza `/data/bot.db` da, rasmlar `/data/images/` da saqlanadi.
+**Bot rejimi.** Xizmat uzluksiz ishlaydigan hostda polling yetarli. Uxlab
+qoladigan hostda `USE_WEBHOOK=true` qiling — Telegram yangilanishni yuborganda
+xizmat uyg'onadi. Webhook manzili ochiq bo'lgani uchun `WEBHOOK_SECRET` ni
+to'ldiring: server har bir so'rovni shu kalit bilan tekshiradi.
 
-Joylashtirgandan keyin:
+`Dockerfile` har qanday hostga mos (Render, Fly.io, Koyeb va h.k.):
+Node bilan Mini App build qilinadi, so'ng Python muhitida ishga tushadi.
+`nixpacks.toml` esa Railway uchun.
 
-1. Olingan HTTPS manzilni `WEBAPP_URL` ga yozing va xizmatni qayta ishga tushiring
-2. [@BotFather](https://t.me/BotFather) da `/setmenubutton` orqali shu manzilni Mini App sifatida ulang
-3. `ADMIN_IDS` ga o'z Telegram ID'ingizni yozing ([@userinfobot](https://t.me/userinfobot) aytadi)
-
-`nixpacks.toml` Railway uchun tayyor: Python va Node o'rnatiladi, Mini App
-build qilinadi va `python -m app.main` ishga tushadi.
+Joylashtirgandan keyin `WEBAPP_URL` ga olingan HTTPS manzilni yozing (Render'da
+avtomatik). [@BotFather](https://t.me/BotFather) da qo'shimcha sozlash shart
+emas — Mini App tugmasi shu manzildan ochiladi.
 
 ### Frontend ustida ishlash
 

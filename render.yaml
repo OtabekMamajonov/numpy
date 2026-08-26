@@ -1,0 +1,27 @@
+# Render.com uchun Blueprint. Repo ulanganda Render shu faylni o'qib,
+# xizmatni o'zi sozlaydi — qo'lda to'ldiriladigani faqat maxfiy qiymatlar.
+services:
+  - type: web
+    name: qurilish-xizmatlari
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/categories
+    envVars:
+      # @BotFather bergan token
+      - key: BOT_TOKEN
+        sync: false
+      # Admin Telegram ID lari, vergul bilan
+      - key: ADMIN_IDS
+        sync: false
+      # Postgres manzili (masalan Neon bergan connection string)
+      - key: DATABASE_URL
+        sync: false
+      # Bepul tarifda xizmat uxlab qoladi, shuning uchun polling emas webhook
+      - key: USE_WEBHOOK
+        value: "true"
+      # Webhook manzili ochiq bo'lgani uchun so'rovlar shu kalit bilan tekshiriladi
+      - key: WEBHOOK_SECRET
+        generateValue: true
+      # Birinchi ishga tushishda katalog bo'sh qolmasin
+      - key: SEED_DEMO
+        value: "true"

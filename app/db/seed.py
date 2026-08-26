@@ -35,8 +35,26 @@ DEMO_DATA = [
 ]
 
 
+async def seed_if_empty() -> bool:
+    """Katalog bo'sh bo'lsagina demo ma'lumotlarni qo'shadi.
+
+    Yangi joylashtirishda katalog bo'm-bo'sh bo'lmasin uchun ishlatiladi;
+    mavjud ma'lumotlar ustiga hech narsa yozilmaydi.
+    """
+    async with async_session() as session:
+        if await crud.get_categories(session):
+            return False
+    await _insert_demo()
+    return True
+
+
 async def seed() -> None:
     await init_db()
+    await _insert_demo()
+    print("Demo katalog muvaffaqiyatli qo'shildi.")
+
+
+async def _insert_demo() -> None:
     async with async_session() as session:
         # crud orqali qo'shiladi, shunda price_amount ham to'g'ri hisoblanadi
         for cat_name, services in DEMO_DATA:
@@ -49,7 +67,6 @@ async def seed() -> None:
                     price=price,
                     description=description,
                 )
-    print("Demo katalog muvaffaqiyatli qo'shildi.")
 
 
 if __name__ == "__main__":

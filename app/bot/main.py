@@ -26,6 +26,27 @@ def create_dispatcher() -> Dispatcher:
     return dp
 
 
+async def setup_webhook() -> Bot:
+    """Webhook rejimini yoqadi: Telegram yangilanishlarni API'ga yuboradi.
+
+    Yangilanishlarni qabul qilish `app/api/webhook.py` da — bu funksiya faqat
+    botni tayyorlab, Telegram'ga manzilni bildiradi.
+    """
+    from app.api import webhook as webhook_api
+
+    bot = create_bot()
+    dp = create_dispatcher()
+    webhook_api.bind(bot, dp)
+
+    await bot.set_webhook(
+        url=settings.webhook_url,
+        secret_token=settings.webhook_secret or None,
+        drop_pending_updates=True,
+    )
+    logging.getLogger(__name__).info("Webhook o'rnatildi: %s", settings.webhook_url)
+    return bot
+
+
 async def run_bot() -> None:
     """Botni polling rejimida ishga tushiradi."""
     bot = create_bot()

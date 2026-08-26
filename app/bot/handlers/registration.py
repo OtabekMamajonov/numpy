@@ -20,7 +20,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     async with get_session() as session:
         user = await get_or_create_user(session, message.from_user.id)
 
-    if not settings.webapp_url:
+    if not settings.public_url:
         await message.answer(
             "Bot hali to'liq sozlanmagan: WEBAPP_URL ko'rsatilmagan.\n"
             "Administrator .env faylida Mini App manzilini ko'rsatishi kerak."

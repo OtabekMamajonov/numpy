@@ -1,7 +1,17 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    LargeBinary,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -50,8 +60,19 @@ class Service(Base):
     price: Mapped[str] = mapped_column(String(64))
     # Narx matnidan ajratilgan son — faqat saralash uchun ishlatiladi
     price_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Rasm bazada saqlanadi: bepul hostinglarda doimiy disk bo'lmaydi va
+    # faylga yozilgan rasmlar har qayta joylashtirishda yo'qolib ketardi.
+    image_data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    image_mime: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Tashqi manzildagi rasm uchun (ixtiyoriy)
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
+
+    @property
+    def public_image_url(self) -> str | None:
+        if self.image_data:
+            return f"/api/services/{self.id}/image"
+        return self.image_url
 
     category: Mapped["Category"] = relationship(back_populates="services")
 

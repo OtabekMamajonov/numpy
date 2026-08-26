@@ -2,14 +2,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ServiceOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
     category_id: int
     name: str
     description: str | None
     price: str
-    image_url: str | None
+    # Rasm bazada bo'lsa — uni tarqatuvchi endpoint manzili, aks holda tashqi URL
+    image_url: str | None = Field(default=None, validation_alias="public_image_url")
 
 
 class CategoryOut(BaseModel):

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from app.api.auth import telegram_user
 from app.api.schemas import CategoryOut, CategoryWithServices, MeOut, RegisterIn, ServiceOut
@@ -89,3 +89,17 @@ async def service_detail(service_id: int):
     if service is None:
         raise HTTPException(status_code=404, detail="Service not found")
     return service
+
+
+@router.get("/services/{service_id}/image")
+async def service_image(service_id: int):
+    """Xizmat rasmini bazadan tarqatadi."""
+    async with get_session() as session:
+        service = await get_service(session, service_id)
+    if service is None or not service.image_data:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return Response(
+        content=service.image_data,
+        media_type=service.image_mime or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )

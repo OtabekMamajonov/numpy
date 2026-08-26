@@ -12,7 +12,7 @@ from app.db.models import Brigade, Category, Order, Service
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🛠 Katalog", web_app=WebAppInfo(url=settings.webapp_url))],
+            [KeyboardButton(text="🛠 Katalog", web_app=WebAppInfo(url=settings.public_url))],
             [KeyboardButton(text="📋 Mening buyurtmalarim")],
         ],
         resize_keyboard=True,

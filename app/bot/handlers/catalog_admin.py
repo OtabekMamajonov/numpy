@@ -1,6 +1,5 @@
 """Admin uchun katalogni boshqarish: kategoriya va xizmatlarni qo'shish, tahrirlash, o'chirish."""
 from html import escape
-from pathlib import Path
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -36,25 +35,11 @@ FIELD_PROMPTS = {
 # --- Yordamchi funksiyalar ---
 
 
-async def _save_photo(message: Message, prefix: str) -> str:
+async def _read_photo(message: Message) -> bytes:
+    """Yuborilgan rasmni xotiraga yuklab oladi — u bazada saqlanadi."""
     photo = message.photo[-1]
-    settings.images_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{prefix}_{photo.file_unique_id}.jpg"
-    await message.bot.download(photo.file_id, destination=settings.images_dir / filename)
-    return f"/static/images/{filename}"
-
-
-def _delete_image_file(image_url: str | None) -> None:
-    """Eski rasm faylini diskdan o'chiradi (faqat static/images ichidagilarni)."""
-    if not image_url or not image_url.startswith("/static/images/"):
-        return
-    images_root = settings.images_dir.resolve()
-    path = (images_root / Path(image_url).name).resolve()
-    try:
-        if path.is_relative_to(images_root) and path.is_file():
-            path.unlink()
-    except OSError:
-        pass
+    buffer = await message.bot.download(photo.file_id)
+    return buffer.read()
 
 
 async def _categories_view(session: AsyncSession) -> tuple[str, InlineKeyboardMarkup]:
@@ -90,7 +75,7 @@ async def _service_view(
         f"Kategoriya: {escape(service.category.name)}\n"
         f"Narxi: {escape(service.price)}\n"
         f"Izoh: {escape(service.description) if service.description else '—'}\n"
-        f"Rasm: {'bor ✅' if service.image_url else 'yo`q'}\n"
+        f"Rasm: {'bor ✅' if service.public_image_url else 'yo`q'}\n"
         f"Holati: {'🟢 Faol' if service.is_active else '🔴 Nofaol'}\n"
         f"Buyurtmalar: {orders_count} ta"
     )
@@ -222,8 +207,6 @@ async def delete_category_confirm(callback: CallbackQuery) -> None:
 async def delete_category_apply(callback: CallbackQuery) -> None:
     category_id = int(callback.data.split(":")[2])
     async with get_session() as session:
-        services = await crud.get_services_by_category(session, category_id, include_inactive=True)
-        image_urls = [s.image_url for s in services]
         result = await crud.delete_category(session, category_id)
         text, keyboard = await _categories_view(session)
 
@@ -232,8 +215,6 @@ async def delete_category_apply(callback: CallbackQuery) -> None:
         return
 
     if result == "deleted":
-        for url in image_urls:
-            _delete_image_file(url)
         note = "✅ Kategoriya o'chirildi."
     else:
         note = "✅ Kategoriya katalogdan olib tashlandi (buyurtma tarixi saqlandi)."
@@ -288,7 +269,7 @@ async def add_service_skip_description(callback: CallbackQuery, state: FSMContex
     await callback.answer()
 
 
-async def _finish_add_service(message: Message, state: FSMContext, image_url: str | None) -> None:
+async def _finish_add_service(message: Message, state: FSMContext, image: bytes | None) -> None:
     data = await state.get_data()
     await state.clear()
     async with get_session() as session:
@@ -298,7 +279,8 @@ async def _finish_add_service(message: Message, state: FSMContext, image_url: st
             name=data["name"],
             price=data["price"],
             description=data.get("description"),
-            image_url=image_url,
+            image_data=image,
+            image_mime="image/jpeg" if image else None,
         )
         view = await _service_view(session, service.id)
     text, keyboard = view
@@ -307,8 +289,7 @@ async def _finish_add_service(message: Message, state: FSMContext, image_url: st
 
 @router.message(AddService.image, F.photo)
 async def add_service_image(message: Message, state: FSMContext) -> None:
-    image_url = await _save_photo(message, "srv")
-    await _finish_add_service(message, state, image_url)
+    await _finish_add_service(message, state, await _read_photo(message))
 
 
 @router.callback_query(AddService.image, F.data == "srvadd:skip")
@@ -370,12 +351,14 @@ async def edit_service_photo(message: Message, state: FSMContext) -> None:
         if service is None:
             await message.answer("Xizmat topilmadi.")
             return
-        old_url = service.image_url
-        image_url = await _save_photo(message, f"srv{service.id}")
-        await crud.update_service(session, service.id, image_url=image_url)
+        await crud.update_service(
+            session,
+            service.id,
+            image_data=await _read_photo(message),
+            image_mime="image/jpeg",
+            image_url=None,
+        )
 
-    if old_url != image_url:
-        _delete_image_file(old_url)
     await _show_service(message, data["service_id"])
 
 
@@ -390,11 +373,13 @@ async def edit_service_clear(callback: CallbackQuery, state: FSMContext) -> None
         if service is None:
             await callback.answer("Xizmat topilmadi.", show_alert=True)
             return
-        old_url = service.image_url
-        await crud.update_service(session, service.id, **{field: None})
+        if field == "image":
+            await crud.update_service(
+                session, service.id, image_data=None, image_mime=None, image_url=None
+            )
+        else:
+            await crud.update_service(session, service.id, **{field: None})
 
-    if field == "image":
-        _delete_image_file(old_url)
     await callback.message.edit_reply_markup(reply_markup=None)
     await _show_service(callback.message, data["service_id"])
     await callback.answer()
@@ -450,12 +435,10 @@ async def delete_service_apply(callback: CallbackQuery) -> None:
             await callback.answer("Xizmat topilmadi.", show_alert=True)
             return
         category_id = service.category_id
-        image_url = service.image_url
         result = await crud.delete_service(session, service_id)
         view = await _category_view(session, category_id)
 
     if result == "deleted":
-        _delete_image_file(image_url)
         note = "✅ Xizmat o'chirildi."
     else:
         note = "✅ Xizmat katalogdan yashirildi (buyurtma tarixi saqlandi)."

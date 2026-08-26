@@ -35,6 +35,14 @@ export function register(data) {
   })
 }
 
+export function placeOrder({ serviceId, comment, address }) {
+  return request('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service_id: serviceId, comment, address }),
+  })
+}
+
 export function fetchCategories() {
   return request('/api/categories')
 }

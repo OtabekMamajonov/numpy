@@ -1,23 +1,58 @@
 import { useState } from 'react'
-import { ArrowLeftIcon, ToolIcon } from './icons'
+import { placeOrder } from './api'
+import { ArrowLeftIcon, CheckIcon, ToolIcon } from './icons'
 
 const tg = window.Telegram?.WebApp
 
 export default function ServiceDetail({ service, onBack }) {
   const [comment, setComment] = useState('')
   const [address, setAddress] = useState('')
+  const [sending, setSending] = useState(false)
+  const [placed, setPlaced] = useState(null)
+  const [error, setError] = useState(null)
 
-  const submit = () => {
-    const payload = JSON.stringify({
-      service_id: service.id,
-      comment: comment.trim() || null,
-      address: address.trim() || null,
-    })
-    if (tg?.sendData) {
-      tg.sendData(payload)
-    } else {
-      alert('Bu sahifani Telegram ilovasi ichida oching.')
+  const submit = async () => {
+    if (sending) return
+    setSending(true)
+    setError(null)
+    try {
+      const order = await placeOrder({
+        serviceId: service.id,
+        comment: comment.trim() || null,
+        address: address.trim() || null,
+      })
+      setPlaced(order)
+      tg?.HapticFeedback?.notificationOccurred?.('success')
+    } catch (e) {
+      setError(e.message)
+      setSending(false)
     }
+  }
+
+  if (placed) {
+    return (
+      <div className="app success">
+        <div className="success-badge">
+          <CheckIcon />
+        </div>
+        <h2 className="detail-title">Buyurtma qabul qilindi</h2>
+        <p className="detail-desc">
+          Raqami: <b>#{placed.id}</b>
+          <br />
+          {placed.service_name} — {placed.price}
+          <br />
+          <br />
+          Tez orada operatorimiz siz bilan bog'lanadi. Buyurtma holatini botdagi
+          «📋 Mening buyurtmalarim» bo'limidan kuzatib borasiz.
+        </p>
+        <button className="submit" onClick={() => (tg?.close ? tg.close() : onBack())}>
+          Yopish
+        </button>
+        <button className="link-button" onClick={onBack}>
+          Katalogga qaytish
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -59,8 +94,10 @@ export default function ServiceDetail({ service, onBack }) {
         />
       </label>
 
-      <button className="submit" onClick={submit}>
-        Buyurtma berish
+      {error && <p className="form-error">{error}</p>}
+
+      <button className="submit" onClick={submit} disabled={sending}>
+        {sending ? 'Yuborilmoqda...' : 'Buyurtma berish'}
       </button>
     </div>
   )

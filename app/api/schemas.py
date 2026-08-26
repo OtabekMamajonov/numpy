@@ -32,6 +32,19 @@ class MeOut(BaseModel):
     district: str | None = None
 
 
+class OrderIn(BaseModel):
+    service_id: int
+    comment: str | None = Field(default=None, max_length=2000)
+    address: str | None = Field(default=None, max_length=500)
+
+
+class OrderOut(BaseModel):
+    id: int
+    service_name: str
+    price: str
+    status: str
+
+
 class RegisterIn(BaseModel):
     full_name: str = Field(min_length=2, max_length=255)
     phone: str = Field(min_length=5, max_length=32)

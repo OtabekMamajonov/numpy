@@ -3,13 +3,24 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from app.api.auth import telegram_user
-from app.api.schemas import CategoryOut, CategoryWithServices, MeOut, RegisterIn, ServiceOut
+from app.api.schemas import (
+    CategoryOut,
+    CategoryWithServices,
+    MeOut,
+    OrderIn,
+    OrderOut,
+    RegisterIn,
+    ServiceOut,
+)
+from app.bot.notify import announce_new_order
 from app.db.crud import (
     SORT_POPULAR,
+    create_order,
     get_categories_with_services,
     get_or_create_user,
     get_service,
     get_services_by_category,
+    list_brigades,
     list_services,
     save_registration,
 )
@@ -52,6 +63,37 @@ async def register(data: RegisterIn, tg_user: dict = Depends(telegram_user)):
         phone=user.phone,
         city=user.city,
         district=user.district,
+    )
+
+
+@router.post("/orders", response_model=OrderOut)
+async def place_order(data: OrderIn, tg_user: dict = Depends(telegram_user)):
+    """Mini App'dan buyurtma qabul qiladi.
+
+    Buyurtma sendData orqali emas, shu endpoint orqali yuboriladi: sendData
+    faqat klaviatura tugmasidan ochilgan Mini App'da ishlaydi, bu esa menyu
+    tugmasi yoki to'g'ridan-to'g'ri havoladan ochilganda buyurtmani buzardi.
+    """
+    async with get_session() as session:
+        user = await get_or_create_user(session, tg_user["id"])
+        if not user.is_registered:
+            raise HTTPException(status_code=403, detail="Avval ro'yxatdan o'ting")
+
+        service = await get_service(session, data.service_id)
+        if service is None or not service.is_active:
+            raise HTTPException(status_code=404, detail="Bu xizmat hozircha mavjud emas")
+
+        comment = (data.comment or "").strip() or None
+        address = (data.address or "").strip() or None
+        order = await create_order(session, user.id, service.id, comment, address)
+        brigades = await list_brigades(session)
+
+    await announce_new_order(order, brigades)
+    return OrderOut(
+        id=order.id,
+        service_name=service.name,
+        price=service.price,
+        status=order.status.value,
     )
 
 

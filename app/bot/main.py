@@ -6,6 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
+from app.bot import instance
 from app.bot.handlers import admin, catalog, catalog_admin, registration
 from app.config import settings
 from app.db.database import init_db
@@ -14,7 +15,10 @@ from app.db.database import init_db
 def create_bot() -> Bot:
     if not settings.bot_token:
         raise RuntimeError("BOT_TOKEN .env faylida ko'rsatilmagan")
-    return Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    # API ham shu bot orqali xabar yuboradi (yangi buyurtma bildirishnomasi)
+    instance.set_bot(bot)
+    return bot
 
 
 def create_dispatcher() -> Dispatcher:

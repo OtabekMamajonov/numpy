@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from app.bot.notify import STATUS_LABELS
 from app.bot.states import AddBrigade
 from app.config import settings
 from app.db.crud import (
@@ -22,13 +23,7 @@ router = Router(name="admin")
 router.message.filter(F.from_user.id.in_(settings.admin_id_list))
 router.callback_query.filter(F.from_user.id.in_(settings.admin_id_list))
 
-STATUS_LABELS = {
-    OrderStatus.NEW: "🆕 Yangi",
-    OrderStatus.ASSIGNED: "👷 Brigadaga berildi",
-    OrderStatus.IN_PROGRESS: "🔧 Jarayonda",
-    OrderStatus.DONE: "✅ Bajarildi",
-    OrderStatus.CANCELLED: "❌ Bekor qilindi",
-}
+
 
 
 @router.message(Command("admin"))

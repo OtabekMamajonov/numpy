@@ -12,6 +12,20 @@ export function ArrowLeftIcon() {
   )
 }
 
+export function CheckIcon() {
+  return (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M20 6L9 17l-5-5"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 /** Rasmi yo'q xizmatlar uchun o'rindosh belgi */
 export function ToolIcon({ size = 26 }) {
   return (

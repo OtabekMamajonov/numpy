@@ -9,7 +9,7 @@ o'z brigadalaridan biriga biriktiradi.
 1. **`/start`** — bot salomlashadi va **🛠 Katalog** tugmasini ko'rsatadi.
 2. Tugma Telegram Mini App'ni ochadi. Foydalanuvchi hali ro'yxatdan o'tmagan bo'lsa, avval qisqa forma chiqadi: ism-familiya, telefon, shahar va tuman. Keyin katalog ochiladi — kategoriyalar, xizmatlar, narxlar va rasmlar. Xizmatlarni saralash mumkin: Ommabop · Qimmat · Arzon · Yangi.
 3. Foydalanuvchi xizmatni tanlab, manzil/izoh qo'shib **Buyurtma berish** tugmasini bosadi.
-4. Buyurtma bazaga yoziladi va barcha adminlarga brigadalar ro'yxati bilan yuboriladi.
+4. Buyurtma bazaga yoziladi; mijozga tasdiq, adminlarga esa brigadalar ro'yxati bilan xabar boradi.
 5. Admin tugma orqali brigadani biriktiradi — mijozga ham, brigadaga ham xabar boradi.
 6. Mijoz **📋 Mening buyurtmalarim** orqali holatni kuzatadi.
 
@@ -130,6 +130,29 @@ Bot:
 ```bash
 .venv/bin/python -m app.bot.main
 ```
+
+## Mini App'ni BotFather'ga qo'shish kerakmi?
+
+**Shart emas.** Mini App — bu oddiy sayt: u HTTPS manzilga joylashtiriladi va
+Telegram o'sha manzilni o'z ichida ochadi. Bot `🛠 Katalog` tugmasini
+yuborayotganda manzilni tugma ichiga qo'shib yuboradi, shuning uchun qo'shimcha
+ro'yxatdan o'tkazish talab qilinmaydi.
+
+Xohlasangiz [@BotFather](https://t.me/BotFather) orqali qulaylik qo'shishingiz
+mumkin:
+
+| Buyruq | Nima beradi |
+|---|---|
+| `/setmenubutton` | Xabar maydoni yonida doimiy tugma |
+| `/newapp` | `t.me/botingiz/app` ko'rinishidagi to'g'ridan-to'g'ri havola |
+
+Ikkalasida ham xuddi shu manzil ko'rsatiladi.
+
+> Mini App qayerdan ochilishidan qat'i nazar hammasi ishlaydi: ro'yxatdan
+> o'tish ham, buyurtma berish ham API orqali boradi. (Telegram'ning
+> `sendData()` usuli faqat klaviatura tugmasidan ochilganda ishlaydi, shuning
+> uchun undan foydalanilmaydi — aks holda menyu tugmasidan ochilganda buyurtma
+> jimgina yo'qolardi.)
 
 ## Xavfsizlik: Mini App so'rovlari qanday tekshiriladi
 
@@ -329,6 +352,8 @@ mumkin.
 |---|---|---|
 | GET | `/api/me` | Joriy foydalanuvchi ro'yxatdan o'tganmi (auth talab qiladi) |
 | POST | `/api/register` | Ro'yxatdan o'tkazish (auth talab qiladi) |
+| POST | `/api/orders` | Buyurtma berish (auth talab qiladi) |
+| GET | `/api/services/{id}/image` | Xizmat rasmi (bazadan) |
 | GET | `/api/categories` | Kategoriyalar ro'yxati |
 | GET | `/api/catalog` | Kategoriyalar + ichidagi xizmatlar |
 | GET | `/api/services?sort=&category_id=` | Saralangan xizmatlar (`sort`: `popular`, `expensive`, `cheap`, `new`; `category_id` bo'sh bo'lsa — hammasi) |
